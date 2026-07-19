@@ -1,8 +1,0 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "app.netlify.qrmasters.twa",
-        "sha256_cert_fingerprints": ["0D:5D:65:77:13:15:9D:CC:54:21:7D:F5:A9:8E:C4:48:E5:34:E4:AA:BD:2D:E4:D9:04:5F:CE:D4:E5:24:1E:60"]
-      }
-    }]
