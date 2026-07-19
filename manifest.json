@@ -1,0 +1,76 @@
+{
+  "name": "QR Master — Point. Scan. Done.",
+  "short_name": "QR Master",
+  "description": "The happiest QR & barcode scanner on the web. Scan, generate, and manage codes — privately, on your device.",
+  "start_url": "./index.html",
+  "id": "./index.html",
+  "scope": "./",
+  "dir": "ltr",
+  "lang": "en",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait",
+  "background_color": "#FDF6E0",
+  "theme_color": "#12132B",
+  "categories": ["utilities", "productivity", "photo"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-home.png",
+      "sizes": "780x1688",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "QR Master home screen"
+    },
+    {
+      "src": "screenshot-scan.png",
+      "sizes": "780x1688",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Live QR and barcode scanning"
+    },
+    {
+      "src": "screenshot-create.png",
+      "sizes": "780x1688",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Create your own QR code"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Scan a code",
+      "short_name": "Scan",
+      "description": "Jump straight to the camera scanner",
+      "url": "./index.html?view=scan",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Create a QR code",
+      "short_name": "Create",
+      "description": "Generate a new QR code",
+      "url": "./index.html?view=generate",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

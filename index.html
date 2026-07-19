@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>QR Master — Point. Scan. Done.</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#12132B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="QR Master">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1225938293197959" crossorigin="anonymous"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,600&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+<style>
+  :root{
+    --bg-1:#FDF6E0;
+    --bg-2:#C9F3DE;
+    --panel:#12132B;
+    --panel-2:#1B1D3B;
+    --grad-a:#F2547D;
+    --grad-b:#8B5CF6;
+    --grad-c:#4F8EF7;
+    --mint:#1FD1A5;
+    --mint-deep:#0FA37F;
+    --coral:#FF6B5B;
+    --ink:#12132B;
+    --paper:#FFFFFF;
+    --muted:#8A8AA3;
+    --line:rgba(18,19,43,0.08);
+    --radius-xl:32px;
+    --radius-lg:24px;
+    --radius-md:16px;
+    --radius-full:999px;
+    --shadow-soft: 0 20px 45px -20px rgba(18,19,43,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;min-height:100%;}
+  body{
+    font-family:'Manrope', sans-serif;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.6), transparent 40%),
+      linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    background-attachment:fixed;
+    background-size:100% 100%;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    color:var(--ink);
+    -webkit-tap-highlight-color:transparent;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+
+  .app{
+    width:100%;
+    max-width:440px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding:28px 20px 110px;
+    position:relative;
+  }
+
+  /* ---------- Header ---------- */
+  .eyebrow{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--ink);
+    opacity:0.75;
+    margin-bottom:6px;
+  }
+  .eyebrow svg{ width:14px; height:14px; }
+  h1.hero{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:clamp(30px, 8.4vw, 40px);
+    line-height:1.08;
+    margin:0 0 14px 0;
+    letter-spacing:-0.01em;
+  }
+  h1.hero.big{ font-size:clamp(32px, 9vw, 42px); margin-bottom:10px; }
+  h1.hero .accent{
+    background:linear-gradient(90deg, var(--grad-a), var(--grad-b), var(--grad-c));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    font-style:italic;
+  }
+
+  /* ---------- Views ---------- */
+  .view{ display:none; flex-direction:column; flex:1; animation:fadeUp 0.35s ease; }
+  .view.active{ display:flex; }
+  @keyframes fadeUp{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  /* ================= HOME VIEW ================= */
+  .home-sub{
+    font-size:15px;
+    line-height:1.55;
+    color:#4B4B63;
+    margin:0 0 20px;
+  }
+  .badge-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .badge{
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:7px 12px;
+    border-radius:var(--radius-full);
+    background:var(--paper);
+    border:1.5px solid var(--line);
+    color:var(--ink);
+  }
+  .home-cta{ display:flex; gap:10px; margin-bottom:8px; }
+
+  .home-preview{
+    margin:26px 0 8px;
+    background: radial-gradient(circle at 50% 20%, var(--panel-2), var(--panel) 75%);
+    border-radius:var(--radius-xl);
+    padding:30px 24px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    box-shadow:var(--shadow-soft);
+    position:relative;
+    overflow:hidden;
+  }
+  .home-preview .mini-orb{
+    width:64px; height:64px;
+    border-radius:50%;
+    background:conic-gradient(from 180deg, var(--grad-a), var(--grad-b), var(--grad-c), var(--grad-a));
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:14px;
+    animation:breathe 3.2s ease-in-out infinite;
+  }
+  .home-preview .mini-orb svg{ width:26px; height:26px; }
+  .home-preview .mono-line{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:#9FA3C7;
+    margin-top:4px;
+  }
+  .home-preview .live-tag{
+    position:absolute;
+    top:16px; right:16px;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--mint);
+    display:flex;
+    align-items:center;
+    gap:5px;
+  }
+  .live-dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--mint);
+    animation:pulseDot 1.4s ease-in-out infinite;
+  }
+  @keyframes pulseDot{ 0%,100%{ opacity:1;} 50%{ opacity:0.3;} }
+
+  .section-eyebrow{
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--mint-deep);
+    margin:34px 0 6px;
+  }
+  .section-title{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:22px;
+    margin:0 0 16px;
+  }
+
+  .feature-grid{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .feature-card{
+    background:var(--paper);
+    border-radius:var(--radius-md);
+    padding:16px;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    box-shadow:0 10px 24px -18px rgba(18,19,43,0.35);
+  }
+  .feature-icon{
+    width:36px; height:36px;
+    border-radius:10px;
+    flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg, var(--grad-a), var(--grad-c));
+  }
+  .feature-icon svg{ width:17px; height:17px; color:#fff; }
+  .feature-body h3{ margin:0 0 3px; font-size:14.5px; font-weight:800; }
+  .feature-body p{ margin:0; font-size:13px; color:var(--muted); line-height:1.45; }
+
+  .steps-list{ display:flex; flex-direction:column; gap:14px; }
+  .step-row{ display:flex; gap:14px; align-items:flex-start; }
+  .step-num{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:22px;
+    color:transparent;
+    -webkit-text-stroke:1.4px var(--ink);
+    width:34px;
+    flex-shrink:0;
+  }
+  .step-text h3{ margin:0 0 3px; font-size:14.5px; font-weight:800; }
+  .step-text p{ margin:0; font-size:13px; color:var(--muted); line-height:1.45; }
+
+  .faq-item{
+    background:var(--paper);
+    border-radius:var(--radius-md);
+    padding:14px 16px;
+    margin-bottom:8px;
+    box-shadow:0 8px 20px -16px rgba(18,19,43,0.3);
+  }
+  .faq-item summary{
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    list-style:none;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .faq-item summary::-webkit-details-marker{ display:none; }
+  .faq-item summary::after{
+    content:"+";
+    font-size:18px;
+    color:var(--muted);
+    transition:transform 0.2s ease;
+  }
+  .faq-item[open] summary::after{ transform:rotate(45deg); }
+  .faq-item p{ margin:10px 0 0; font-size:13px; color:var(--muted); line-height:1.5; }
+
+  .home-footer-cta{
+    margin-top:32px;
+    background:linear-gradient(120deg, var(--grad-a), var(--grad-b) 55%, var(--grad-c));
+    border-radius:var(--radius-lg);
+    padding:24px 22px;
+    color:#fff;
+    text-align:center;
+  }
+  .home-footer-cta h3{
+    font-family:'Fraunces', serif;
+    font-size:20px;
+    margin:0 0 6px;
+  }
+  .home-footer-cta p{ margin:0 0 16px; font-size:13px; opacity:0.9; }
+  .btn-white{
+    background:#fff;
+    color:var(--ink);
+    width:100%;
+  }
+
+  /* ---------- Scan panel ---------- */
+  .scan-panel{
+    background: radial-gradient(circle at 50% 30%, var(--panel-2), var(--panel) 70%);
+    border-radius:var(--radius-xl);
+    min-height:400px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    box-shadow:var(--shadow-soft);
+  }
+  .scan-panel video{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:none;
+  }
+  .scan-panel.live video{ display:block; }
+  .scan-panel.live .idle-content{ display:none; }
+  .scan-frame{
+    position:absolute;
+    inset:0;
+    display:none;
+    pointer-events:none;
+  }
+  .scan-panel.live .scan-frame{ display:block; }
+  .scan-frame::before{
+    content:"";
+    position:absolute;
+    top:14%; left:14%; right:14%; bottom:14%;
+    border:2px solid rgba(255,255,255,0.85);
+    border-radius:20px;
+    box-shadow:0 0 0 999px rgba(18,19,43,0.45);
+  }
+  .scan-line{
+    position:absolute;
+    left:14%; right:14%;
+    top:14%;
+    height:2px;
+    background:linear-gradient(90deg, transparent, var(--mint), transparent);
+    animation:sweep 2.2s ease-in-out infinite;
+  }
+  @keyframes sweep{
+    0%,100%{ top:14%; opacity:0.9; }
+    50%{ top:82%; opacity:0.5; }
+  }
+
+  .idle-content{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    padding:40px 30px;
+  }
+  .orb{
+    width:110px;
+    height:110px;
+    border-radius:50%;
+    background:conic-gradient(from 180deg, var(--grad-a), var(--grad-b), var(--grad-c), var(--grad-a));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:26px;
+    animation:breathe 3.2s ease-in-out infinite;
+    box-shadow:0 0 0 0 rgba(139,92,246,0.4);
+  }
+  @keyframes breathe{
+    0%,100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(139,92,246,0.35); }
+    50%{ transform:scale(1.05); box-shadow:0 0 0 18px rgba(139,92,246,0); }
+  }
+  .orb svg{ width:40px; height:40px; }
+  .idle-content p{
+    color:#C9CAE0;
+    font-size:15px;
+    font-weight:600;
+    margin:0 0 6px;
+  }
+  .idle-content .formats-line{
+    color:#6E71A0;
+    font-size:11.5px;
+    font-weight:600;
+    margin:0;
+  }
+  .scan-status{
+    position:absolute;
+    bottom:18px;
+    left:0; right:0;
+    text-align:center;
+    color:#DDEFEA;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.04em;
+    display:none;
+  }
+  .scan-panel.live .scan-status{ display:block; }
+
+  /* ---------- Action buttons ---------- */
+  .actions{
+    display:flex;
+    gap:12px;
+    margin-top:18px;
+  }
+  .btn{
+    border:none;
+    cursor:pointer;
+    font-family:'Manrope', sans-serif;
+    font-weight:800;
+    font-size:15px;
+    border-radius:var(--radius-full);
+    padding:16px 18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn:active{ transform:scale(0.97); }
+  .btn svg{ width:18px; height:18px; flex-shrink:0; }
+  .btn-primary{
+    flex:1.3;
+    background:linear-gradient(90deg, var(--grad-a), var(--grad-b) 55%, var(--grad-c));
+    color:#fff;
+    box-shadow:0 12px 24px -10px rgba(139,92,246,0.55);
+  }
+  .btn-secondary{
+    flex:1;
+    background:var(--mint);
+    color:#08331F;
+    box-shadow:0 12px 24px -10px rgba(31,209,165,0.5);
+  }
+  .btn-outline{
+    background:transparent;
+    border:2px solid var(--ink);
+    color:var(--ink);
+  }
+  .btn-block{ width:100%; }
+  .btn:disabled{ opacity:0.55; cursor:not-allowed; }
+
+  /* ---------- Result card ---------- */
+  .result-card{
+    margin-top:18px;
+    background:var(--paper);
+    border-radius:var(--radius-lg);
+    padding:20px;
+    box-shadow:var(--shadow-soft);
+    display:none;
+  }
+  .result-card.show{ display:block; animation:fadeUp 0.3s ease; }
+  .result-label{
+    font-size:11px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    color:var(--mint-deep);
+    margin-bottom:8px;
+    display:flex;
+    justify-content:space-between;
+  }
+  .result-format{ color:var(--muted); font-weight:700; }
+  .result-value{
+    font-family:'JetBrains Mono', monospace;
+    font-size:15px;
+    line-height:1.5;
+    word-break:break-word;
+    margin-bottom:16px;
+  }
+  .result-row{ display:flex; gap:10px; }
+
+  .wifi-card{
+    display:none;
+    background:#F7F6F1;
+    border-radius:var(--radius-md);
+    padding:14px;
+    margin-bottom:16px;
+  }
+  .wifi-card.show{ display:block; }
+  .wifi-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+    gap:10px;
+  }
+  .wifi-row:last-of-type{ border-bottom:none; }
+  .wifi-label{
+    font-size:12px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--muted);
+    flex-shrink:0;
+  }
+  .wifi-val{
+    font-family:'JetBrains Mono', monospace;
+    font-size:14px;
+    font-weight:600;
+    text-align:right;
+    word-break:break-word;
+  }
+  .wifi-card .result-row{ margin-top:12px; }
+  .wifi-hint{
+    font-size:11.5px;
+    color:var(--muted);
+    margin:10px 0 0;
+    line-height:1.4;
+  }
+  .chip-btn{
+    flex:1;
+    border:1px solid var(--line);
+    background:#F7F6F1;
+    border-radius:var(--radius-md);
+    padding:12px;
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+  }
+  .chip-btn svg{ width:15px; height:15px; }
+
+  /* ---------- Generate view ---------- */
+  .field-label{
+    font-size:12px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    color:var(--muted);
+    margin:18px 0 8px;
+  }
+  .field-label:first-child{ margin-top:0; }
+  textarea, select{
+    width:100%;
+    font-family:'Manrope', sans-serif;
+    font-size:15px;
+    font-weight:600;
+    padding:16px;
+    border-radius:var(--radius-md);
+    border:2px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
+    resize:none;
+  }
+  textarea:focus, select:focus, input:focus{
+    outline:none;
+    border-color:var(--grad-b);
+  }
+  .type-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:8px;
+    margin-bottom:4px;
+  }
+  .type-pill{
+    padding:10px 4px;
+    border-radius:var(--radius-md);
+    border:2px solid var(--line);
+    background:var(--paper);
+    text-align:center;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .type-pill.active{
+    border-color:var(--grad-b);
+    background:linear-gradient(90deg, rgba(242,84,125,0.12), rgba(79,142,247,0.12));
+    color:var(--grad-b);
+  }
+  .qr-preview{
+    margin-top:22px;
+    background:var(--paper);
+    border-radius:var(--radius-lg);
+    padding:28px;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    box-shadow:var(--shadow-soft);
+  }
+  .qr-preview.show{ display:flex; animation:fadeUp 0.3s ease; }
+  #qrcode-canvas{ border-radius:12px; overflow:hidden; }
+  .qr-preview .result-row{ width:100%; margin-top:18px; }
+
+  /* ---------- History view ---------- */
+  .history-empty{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    color:var(--muted);
+    padding:40px 20px;
+  }
+  .history-empty svg{ width:48px; height:48px; margin-bottom:14px; opacity:0.5; }
+  .history-empty p{ font-weight:700; margin:0 0 4px; color:var(--ink); }
+  .history-empty span{ font-size:13px; }
+  .history-list{ display:flex; flex-direction:column; gap:10px; }
+  .history-item{
+    background:var(--paper);
+    border-radius:var(--radius-md);
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    box-shadow:0 8px 20px -14px rgba(18,19,43,0.3);
+  }
+  .history-icon{
+    width:38px; height:38px;
+    border-radius:10px;
+    background:linear-gradient(135deg, var(--grad-a), var(--grad-c));
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .history-icon svg{ width:18px; height:18px; color:#fff; }
+  .history-body{ flex:1; min-width:0; }
+  .history-value{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .history-meta{ font-size:11px; color:var(--muted); margin-top:2px; display:flex; gap:8px; }
+  .history-clear{
+    text-align:center;
+    margin-top:16px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--grad-a);
+    background:none;
+    border:none;
+    cursor:pointer;
+  }
+
+  /* ---------- Bottom nav ---------- */
+  .tabbar{
+    position:fixed;
+    bottom:18px;
+    left:0; right:0;
+    display:flex;
+    justify-content:center;
+    z-index:20;
+  }
+  .tabbar-inner{
+    width:calc(100% - 40px);
+    max-width:400px;
+    background:var(--paper);
+    border-radius:var(--radius-full);
+    border:2px solid var(--panel);
+    display:flex;
+    padding:6px;
+    box-shadow:0 16px 34px -14px rgba(18,19,43,0.4);
+  }
+  .tab{
+    flex:1;
+    border:none;
+    background:none;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+    padding:9px 2px;
+    border-radius:var(--radius-full);
+    cursor:pointer;
+    font-family:'Manrope', sans-serif;
+    font-weight:700;
+    font-size:10.5px;
+    color:var(--ink);
+    transition:background 0.2s ease, color 0.2s ease;
+  }
+  .tab svg{ width:18px; height:18px; }
+  .tab.active{
+    background:linear-gradient(90deg, var(--grad-a), var(--grad-b), var(--grad-c));
+    color:#fff;
+  }
+
+  .hidden-input{ display:none; }
+  .toast{
+    position:fixed;
+    bottom:100px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--ink);
+    color:#fff;
+    padding:12px 22px;
+    border-radius:var(--radius-full);
+    font-size:13px;
+    font-weight:700;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.25s ease, transform 0.25s ease;
+    z-index:50;
+    max-width:88%;
+    text-align:center;
+    white-space:normal;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ---------- Animated splash ---------- */
+  #appSplash{
+    position:fixed;
+    inset:0;
+    z-index:99999;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.6), transparent 40%),
+      linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    transition:opacity 0.5s ease, visibility 0.5s ease;
+  }
+  #appSplash.hide{
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+  }
+  #splashLogo{ display:none; }
+  .splash-logo-wrap{
+    position:relative;
+    width:120px;
+    height:120px;
+    filter: drop-shadow(0 12px 28px rgba(139,92,246,0.35));
+  }
+  .splash-ring{
+    position:absolute;
+    inset:0;
+    transform: rotate(-90deg);
+    animation: ringSweep 1.5s cubic-bezier(0.65,0,0.35,1) both;
+  }
+  .ring-track{
+    stroke-dasharray: 289;
+    stroke-dashoffset: 289;
+    animation: drawRing 1.3s ease-out both;
+  }
+  @keyframes drawRing{
+    0%{ stroke-dashoffset:289; }
+    100%{ stroke-dashoffset:0; }
+  }
+  @keyframes ringSweep{
+    0%{ transform:rotate(-90deg); }
+    100%{ transform:rotate(270deg); }
+  }
+  .splash-camera{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    transform:scale(0.6);
+    animation: splashCamIn 0.5s ease 1.05s both;
+  }
+  .splash-camera svg{ width:34px; height:34px; }
+  @keyframes splashCamIn{
+    to{ opacity:1; transform:scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .splash-ring, .ring-track, .splash-camera{ animation:none; }
+    .ring-track{ stroke-dashoffset:0; }
+    .splash-camera{ opacity:1; transform:scale(1); }
+  }
+</style>
+</head>
+<body>
+<div id="appSplash">
+  <div class="splash-logo-wrap">
+    <svg class="splash-ring" viewBox="0 0 120 120" width="120" height="120">
+      <defs>
+        <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#F2547D"/>
+          <stop offset="50%" stop-color="#8B5CF6"/>
+          <stop offset="100%" stop-color="#4F8EF7"/>
+        </linearGradient>
+      </defs>
+      <circle class="ring-track" cx="60" cy="60" r="46" fill="none" stroke="url(#ringGrad)" stroke-width="14" stroke-linecap="round"/>
+    </svg>
+    <div class="splash-camera">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#12132B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    </div>
+  </div>
+</div>
+<div class="app">
+
+  <!-- ================= HOME VIEW ================= -->
+  <div class="view active" id="view-home">
+    <div class="eyebrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h4M4 4v4M20 4h-4M20 4v4M4 20h4M4 20v-4M20 20h-4M20 20v-4"/></svg>
+      QR Master · v1 · 100% local
+    </div>
+    <h1 class="hero big">The happiest <span class="accent">QR &amp; barcode</span> scanner on the web.</h1>
+    <p class="home-sub">Scan from camera or gallery, create your own QR codes, and keep a tidy history — all in one playful little app. No accounts, no tracking.</p>
+
+    <div class="badge-row">
+      <span class="badge">Private</span>
+      <span class="badge">Instant</span>
+      <span class="badge">Mobile-first</span>
+    </div>
+
+    <div class="home-cta">
+      <button class="btn btn-primary" data-goto="scan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Start scanning
+      </button>
+      <button class="btn btn-outline" data-goto="generate">Make a QR</button>
+    </div>
+
+    <div class="home-preview">
+      <span class="live-tag"><span class="live-dot"></span>Live</span>
+      <div class="mini-orb">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+      <div class="mono-line">masterqr.app · scanning…</div>
+    </div>
+
+    <div class="section-eyebrow">Features</div>
+    <h2 class="section-title">Everything you need. Nothing you don't.</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+        <div class="feature-body">
+          <h3>Live camera scanning</h3>
+          <p>QR, EAN, UPC, Code 128, Data Matrix, PDF417 and more — read in real time with a tap.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+        <div class="feature-body">
+          <h3>Scan from gallery</h3>
+          <p>Pick any photo with a code and we'll decode it instantly.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 4h4M4 4v4M20 4h-4M20 4v4M4 20h4M4 20v-4M20 20h-4M20 20v-4"/></svg></div>
+        <div class="feature-body">
+          <h3>Create QR codes</h3>
+          <p>Links, plain text, Wi-Fi, email — download as a clean PNG.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg></div>
+        <div class="feature-body">
+          <h3>Wi-Fi share</h3>
+          <p>Generate a Wi-Fi QR so guests can join in one tap — no typing passwords.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+        <div class="feature-body">
+          <h3>Local history</h3>
+          <p>Every scan kept in this session. Browse, revisit, clear anytime.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <div class="feature-body">
+          <h3>Smart actions</h3>
+          <p>Open links, copy text, or connect to Wi-Fi — straight from the result.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="feature-body">
+          <h3>Private by default</h3>
+          <p>No accounts. No analytics on your scans. Camera stays in the browser.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-eyebrow">How it works</div>
+    <h2 class="section-title">Three taps. That's it.</h2>
+    <div class="steps-list">
+      <div class="step-row">
+        <div class="step-num">01</div>
+        <div class="step-text"><h3>Point your camera</h3><p>Open the scanner and aim at any QR or barcode.</p></div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">02</div>
+        <div class="step-text"><h3>Get the result</h3><p>We detect, decode and surface a smart action in one beat.</p></div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">03</div>
+        <div class="step-text"><h3>Act or save</h3><p>Open the link, copy the text, or revisit it later in history.</p></div>
+      </div>
+    </div>
+
+    <div class="section-eyebrow">FAQ</div>
+    <h2 class="section-title">Good questions.</h2>
+    <details class="faq-item">
+      <summary>Is QR Master free?</summary>
+      <p>Yes — entirely free, no accounts and no ads.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Where is my scan history stored?</summary>
+      <p>Only in this session, on your device. Refreshing or closing the tab clears it — nothing is sent anywhere.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Which formats are supported?</summary>
+      <p>QR, Data Matrix, Aztec, PDF417, EAN-8/13, UPC-A/E, Code 39/93/128, ITF and more.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Does it work offline?</summary>
+      <p>After your first visit, scanning and generating work without a connection.</p>
+    </details>
+
+    <div class="home-footer-cta">
+      <h3>Ready to scan?</h3>
+      <p>Pop open the scanner — it's instant, private, and a little bit fun.</p>
+      <button class="btn btn-white" data-goto="scan">Open scanner</button>
+    </div>
+  </div>
+
+  <!-- ================= SCAN VIEW ================= -->
+  <div class="view" id="view-scan">
+    <div class="eyebrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h4M4 4v4M20 4h-4M20 4v4M4 20h4M4 20v-4M20 20h-4M20 20v-4"/></svg>
+      QR Master
+    </div>
+    <h1 class="hero">Point. <span class="accent">Scan.</span> Done.</h1>
+
+    <div class="scan-panel" id="scanPanel">
+      <video id="video" playsinline muted></video>
+      <div class="scan-frame"><div class="scan-line"></div></div>
+      <div class="idle-content">
+        <div class="orb">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <p>Point your camera at a QR or barcode</p>
+        <p class="formats-line">Reads QR, EAN, UPC, Code 128, Data Matrix and more</p>
+      </div>
+      <div class="scan-status" id="scanStatus">Scanning…</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="btnStartScan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Start scanning
+      </button>
+      <button class="btn btn-secondary" id="btnGallery">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        Gallery
+      </button>
+    </div>
+    <input type="file" accept="image/*" class="hidden-input" id="fileInput">
+
+    <div class="result-card" id="resultCard">
+      <div class="result-label"><span>Scan result</span><span class="result-format" id="resultFormat"></span></div>
+
+      <div class="wifi-card" id="wifiCard">
+        <div class="wifi-row">
+          <span class="wifi-label">Network</span>
+          <span class="wifi-val" id="wifiSsid"></span>
+        </div>
+        <div class="wifi-row">
+          <span class="wifi-label">Password</span>
+          <span class="wifi-val" id="wifiPass"></span>
+        </div>
+        <div class="result-row">
+          <button class="chip-btn" id="btnCopyWifiPass">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy password
+          </button>
+          <button class="chip-btn" id="btnWifiSettings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+            Wi-Fi settings
+          </button>
+        </div>
+        <p class="wifi-hint">Password is copied to your clipboard. Open Wi-Fi settings, tap this network, and paste it in.</p>
+      </div>
+
+      <div class="result-value" id="resultValue"></div>
+      <div class="result-row" id="genericActions">
+        <button class="chip-btn" id="btnCopy">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+        <button class="chip-btn" id="btnOpen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+          Open
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GENERATE VIEW ================= -->
+  <div class="view" id="view-generate">
+    <div class="eyebrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h4M4 4v4M20 4h-4M20 4v4M4 20h4M4 20v-4M20 20h-4M20 20v-4"/></svg>
+      QR Master
+    </div>
+    <h1 class="hero">Make your <span class="accent">own</span> code.</h1>
+
+    <div class="type-grid">
+      <div class="type-pill active" data-type="text">Text</div>
+      <div class="type-pill" data-type="url">URL</div>
+      <div class="type-pill" data-type="wifi">WiFi</div>
+      <div class="type-pill" data-type="email">Email</div>
+    </div>
+
+    <div id="genFields">
+      <div class="field-label">Content</div>
+      <textarea id="genText" rows="3" placeholder="Type or paste anything…"></textarea>
+    </div>
+
+    <button class="btn btn-primary btn-block" id="btnGenerate" style="margin-top:20px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h4M4 4v4M20 4h-4M20 4v4M4 20h4M4 20v-4M20 20h-4M20 20v-4"/></svg>
+      Generate QR code
+    </button>
+
+    <div class="qr-preview" id="qrPreview">
+      <div id="qrcode-canvas"></div>
+      <div class="result-row">
+        <button class="chip-btn" id="btnDownload">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          Download
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HISTORY VIEW ================= -->
+  <div class="view" id="view-history">
+    <div class="eyebrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h4M4 4v4M20 4h-4M20 4v4M4 20h4M4 20v-4M20 20h-4M20 20v-4"/></svg>
+      QR Master
+    </div>
+    <h1 class="hero">Your <span class="accent">history.</span></h1>
+
+    <div class="history-empty" id="historyEmpty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      <p>No scans yet</p>
+      <span>Codes you scan this session will show up here.</span>
+    </div>
+    <div class="history-list" id="historyList"></div>
+    <button class="history-clear" id="btnClearHistory" style="display:none;">Clear history</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="tabbar">
+  <div class="tabbar-inner">
+    <button class="tab active" data-view="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+      Home
+    </button>
+    <button class="tab" data-view="scan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z"/></svg>
+      Scan
+    </button>
+    <button class="tab" data-view="generate">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      Create
+    </button>
+    <button class="tab" data-view="history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      History
+    </button>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------- State (in-memory only, no browser storage) ----------
+  let scanHistory = [];
+  let codeReader = null;
+  let scanningActive = false;
+  let currentStreamControls = null;
+
+  const views = {
+    home: document.getElementById('view-home'),
+    scan: document.getElementById('view-scan'),
+    generate: document.getElementById('view-generate'),
+    history: document.getElementById('view-history')
+  };
+  const tabs = document.querySelectorAll('.tab');
+
+  function goToView(v){
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.view === v));
+    Object.keys(views).forEach(k => views[k].classList.toggle('active', k === v));
+    if (v !== 'scan') stopCamera();
+    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+  }
+
+  tabs.forEach(tab => tab.addEventListener('click', () => goToView(tab.dataset.view)));
+  document.querySelectorAll('[data-goto]').forEach(btn => {
+    btn.addEventListener('click', () => goToView(btn.dataset.goto));
+  });
+
+  // Support app shortcuts / deep links: index.html?view=scan
+  const requestedView = new URLSearchParams(window.location.search).get('view');
+  if (requestedView && views[requestedView]) goToView(requestedView);
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 4500);
+  }
+
+  // ---------- Scan view (ZXing: QR + 1D/2D barcodes) ----------
+  const scanPanel = document.getElementById('scanPanel');
+  const video = document.getElementById('video');
+  const btnStartScan = document.getElementById('btnStartScan');
+  const btnGallery = document.getElementById('btnGallery');
+  const fileInput = document.getElementById('fileInput');
+  const resultCard = document.getElementById('resultCard');
+  const resultValue = document.getElementById('resultValue');
+  const resultFormat = document.getElementById('resultFormat');
+
+  function getReader(){
+    if (!codeReader && window.ZXing){
+      const hints = new Map();
+      hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+      hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+        ZXing.BarcodeFormat.EAN_13,
+        ZXing.BarcodeFormat.EAN_8,
+        ZXing.BarcodeFormat.UPC_A,
+        ZXing.BarcodeFormat.UPC_E,
+        ZXing.BarcodeFormat.CODE_128,
+        ZXing.BarcodeFormat.CODE_39,
+        ZXing.BarcodeFormat.CODE_93,
+        ZXing.BarcodeFormat.ITF,
+        ZXing.BarcodeFormat.DATA_MATRIX,
+        ZXing.BarcodeFormat.PDF_417,
+        ZXing.BarcodeFormat.AZTEC
+      ]);
+      codeReader = new ZXing.BrowserMultiFormatReader(hints);
+    }
+    return codeReader;
+  }
+
+  const captureCanvas = document.createElement('canvas');
+  const captureCtx = captureCanvas.getContext('2d', { willReadFrequently: true });
+  let rafId = null;
+
+  async function startCamera(){
+    try{
+      scanPanel.classList.add('live');
+      scanningActive = true;
+      btnStartScan.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg> Stop scanning';
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      currentStreamControls = stream;
+      video.srcObject = stream;
+      await video.play();
+      tick();
+    }catch(err){
+      const detail = (err && (err.name || err.message)) ? `${err.name || ''} ${err.message || ''}`.trim() : String(err);
+      showToast('Camera access denied or unavailable');
+      stopCamera();
+    }
+  }
+
+  let frameCount = 0;
+
+  function tick(){
+    if (!scanningActive) return;
+    if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0){
+      const vw = video.videoWidth, vh = video.videoHeight;
+      // Crop to the visible scan-frame area (14% inset on each side, matching the CSS overlay)
+      const cropX = vw * 0.14, cropY = vh * 0.14;
+      const cropW = vw * 0.72, cropH = vh * 0.72;
+      captureCanvas.width = cropW;
+      captureCanvas.height = cropH;
+      captureCtx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+      const imageData = captureCtx.getImageData(0, 0, captureCanvas.width, captureCanvas.height);
+      if (!window.jsQR){
+        showToast('jsQR library did not load — check connection');
+        stopCamera();
+        return;
+      }
+      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+      if (code && code.data){
+        handleScanResult(code.data, null);
+        stopCamera();
+        return;
+      }
+
+      // Every few frames, also try ZXing for non-QR barcodes (EAN, UPC, Code128, etc.)
+      // Run less often than jsQR since it's heavier on CPU.
+      frameCount++;
+      if (frameCount % 5 === 0 && window.ZXing){
+        const reader = getReader();
+        if (reader){
+          reader.decodeFromImage(undefined, captureCanvas.toDataURL('image/png'))
+            .then((result) => {
+              if (scanningActive){
+                handleScanResult(result.getText(), result.getBarcodeFormat ? result.getBarcodeFormat() : null);
+                stopCamera();
+              }
+            })
+            .catch(() => { /* no barcode found this frame, keep scanning */ });
+        }
+      }
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function stopCamera(){
+    scanningActive = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+    if (currentStreamControls && currentStreamControls.getTracks){
+      currentStreamControls.getTracks().forEach(t => t.stop());
+    }
+    currentStreamControls = null;
+    scanPanel.classList.remove('live');
+    btnStartScan.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Start scanning';
+  }
+
+  function formatLabel(fmt){
+    if (fmt === null || fmt === undefined || !window.ZXing) return '';
+    const names = Object.keys(ZXing.BarcodeFormat).filter(k => ZXing.BarcodeFormat[k] === fmt);
+    return names[0] ? names[0].replace(/_/g, ' ') : '';
+  }
+
+  function parseWifiQR(text){
+    const get = (key) => {
+      const re = new RegExp(key + ':((?:\\\\.|[^;\\\\])*);');
+      const m = text.match(re);
+      return m ? m[1].replace(/\\(.)/g, '$1') : '';
+    };
+    return { ssid: get('S'), pass: get('P'), type: get('T') };
+  }
+
+  const wifiCard = document.getElementById('wifiCard');
+  const wifiSsid = document.getElementById('wifiSsid');
+  const wifiPass = document.getElementById('wifiPass');
+  const genericActions = document.getElementById('genericActions');
+
+  function handleScanResult(text, fmt){
+    resultFormat.textContent = formatLabel(fmt);
+    resultCard.classList.add('show');
+
+    if (/^WIFI:/i.test(text)){
+      const wifi = parseWifiQR(text);
+      if (wifi.ssid){
+        wifiSsid.textContent = wifi.ssid;
+        wifiPass.textContent = wifi.pass || '(none)';
+        wifiCard.classList.add('show');
+        resultValue.style.display = 'none';
+        genericActions.style.display = 'none';
+        addHistory(text, formatLabel(fmt));
+        showToast('Wi-Fi network found');
+        return;
+      }
+    }
+
+    wifiCard.classList.remove('show');
+    resultValue.style.display = '';
+    genericActions.style.display = '';
+    resultValue.textContent = text;
+    addHistory(text, formatLabel(fmt));
+    showToast('Code detected');
+  }
+
+  btnStartScan.addEventListener('click', () => {
+    if (scanningActive){ stopCamera(); } else { startCamera(); }
+  });
+
+  btnGallery.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = async () => {
+      try{
+        const naturalW = img.naturalWidth || img.width;
+        const naturalH = img.naturalHeight || img.height;
+        // Downscale large camera photos (e.g. 4000px+) — huge canvases are slow/unreliable to decode.
+        const MAX_DIM = 1600;
+        const scale = Math.min(1, MAX_DIM / Math.max(naturalW, naturalH));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(naturalW * scale);
+        canvas.height = Math.round(naturalH * scale);
+        const cctx = canvas.getContext('2d');
+        cctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const imageData = cctx.getImageData(0, 0, canvas.width, canvas.height);
+        if (!window.jsQR){
+          showToast('jsQR library did not load — check connection');
+          return;
+        }
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+
+        if (code && code.data){
+          handleScanResult(code.data, null);
+        } else {
+          // Fallback: try ZXing for non-QR barcode formats (EAN, UPC, Code128, etc.)
+          const reader = getReader();
+          const result = await reader.decodeFromImage(undefined, canvas.toDataURL('image/png'));
+          handleScanResult(result.getText(), result.getBarcodeFormat ? result.getBarcodeFormat() : null);
+        }
+      }catch(err){
+        const detail = (err && (err.name || err.message)) ? `${err.name || ''} ${err.message || ''}`.trim() : String(err);
+        showToast('No code found: ' + detail);
+      }finally{
+        URL.revokeObjectURL(url);
+      }
+    };
+    img.onerror = () => {
+      showToast('Could not load that image');
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
+
+  document.getElementById('btnCopyWifiPass').addEventListener('click', () => {
+    navigator.clipboard.writeText(wifiPass.textContent).then(() => showToast('Password copied'));
+  });
+  document.getElementById('btnWifiSettings').addEventListener('click', () => {
+    navigator.clipboard.writeText(wifiPass.textContent).catch(() => {});
+    showToast('Password copied — open Wi-Fi settings from your phone and select this network');
+  });
+
+  document.getElementById('btnCopy').addEventListener('click', () => {
+    navigator.clipboard.writeText(resultValue.textContent).then(() => showToast('Copied to clipboard'));
+  });
+  document.getElementById('btnOpen').addEventListener('click', () => {
+    const val = resultValue.textContent;
+    if (/^https?:\/\//i.test(val)) window.open(val, '_blank');
+    else showToast('Not a valid link');
+  });
+
+  // ---------- Generate view ----------
+  const typePills = document.querySelectorAll('.type-pill');
+  const genFields = document.getElementById('genFields');
+  let currentType = 'text';
+
+  const fieldTemplates = {
+    text: `<div class="field-label">Content</div><textarea id="genText" rows="3" placeholder="Type or paste anything…"></textarea>`,
+    url: `<div class="field-label">Website URL</div><textarea id="genText" rows="2" placeholder="https://example.com"></textarea>`,
+    wifi: `<div class="field-label">Network name (SSID)</div><textarea id="genSsid" rows="1" placeholder="MyWiFi"></textarea><div class="field-label">Password</div><textarea id="genPass" rows="1" placeholder="Password"></textarea>`,
+    email: `<div class="field-label">Email address</div><textarea id="genText" rows="1" placeholder="name@example.com"></textarea>`
+  };
+
+  typePills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      typePills.forEach(p => p.classList.toggle('active', p === pill));
+      currentType = pill.dataset.type;
+      genFields.innerHTML = fieldTemplates[currentType];
+    });
+  });
+
+  const qrPreview = document.getElementById('qrPreview');
+  const qrCanvasDiv = document.getElementById('qrcode-canvas');
+
+  document.getElementById('btnGenerate').addEventListener('click', () => {
+    let payload = '';
+    if (currentType === 'wifi'){
+      const ssid = document.getElementById('genSsid')?.value.trim() || '';
+      const pass = document.getElementById('genPass')?.value.trim() || '';
+      if (!ssid){ showToast('Enter a network name'); return; }
+      payload = `WIFI:T:WPA;S:${ssid};P:${pass};;`;
+    } else if (currentType === 'email'){
+      const val = document.getElementById('genText')?.value.trim() || '';
+      if (!val){ showToast('Enter an email address'); return; }
+      payload = `mailto:${val}`;
+    } else {
+      const val = document.getElementById('genText')?.value.trim() || '';
+      if (!val){ showToast('Enter some content first'); return; }
+      payload = val;
+    }
+
+    qrCanvasDiv.innerHTML = '';
+    const canvas = document.createElement('canvas');
+    qrCanvasDiv.appendChild(canvas);
+    new QRious({
+      element: canvas,
+      value: payload,
+      size: 240,
+      background: '#ffffff',
+      foreground: '#12132B',
+      level: 'H'
+    });
+    qrPreview.classList.add('show');
+  });
+
+  document.getElementById('btnDownload').addEventListener('click', () => {
+    const canvas = qrCanvasDiv.querySelector('canvas');
+    if (!canvas){ showToast('Generate a code first'); return; }
+    const link = document.createElement('a');
+    link.download = 'qr-master-code.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+
+  // ---------- History view ----------
+  const historyEmpty = document.getElementById('historyEmpty');
+  const historyList = document.getElementById('historyList');
+  const btnClearHistory = document.getElementById('btnClearHistory');
+
+  function addHistory(value, format){
+    scanHistory.unshift({ value, format, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+    renderHistory();
+  }
+
+  function renderHistory(){
+    if (scanHistory.length === 0){
+      historyEmpty.style.display = 'flex';
+      historyList.innerHTML = '';
+      btnClearHistory.style.display = 'none';
+      return;
+    }
+    historyEmpty.style.display = 'none';
+    btnClearHistory.style.display = 'block';
+    historyList.innerHTML = scanHistory.map(item => `
+      <div class="history-item">
+        <div class="history-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </div>
+        <div class="history-body">
+          <div class="history-value">${escapeHtml(item.value)}</div>
+          <div class="history-meta"><span>${item.time}</span>${item.format ? `<span>· ${escapeHtml(item.format)}</span>` : ''}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  btnClearHistory.addEventListener('click', () => {
+    scanHistory = [];
+    renderHistory();
+    showToast('History cleared');
+  });
+
+})();
+
+if ('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+// Hide animated splash once the spin finishes and the page is ready
+(function(){
+  const splash = document.getElementById('appSplash');
+  if (!splash) return;
+  const MIN_DISPLAY_MS = 1900;
+  const start = Date.now();
+  function reveal(){
+    const elapsed = Date.now() - start;
+    const wait = Math.max(0, MIN_DISPLAY_MS - elapsed);
+    setTimeout(() => {
+      splash.classList.add('hide');
+      setTimeout(() => splash.remove(), 600);
+    }, wait);
+  }
+  if (document.readyState === 'complete') reveal();
+  else window.addEventListener('load', reveal);
+})();
+</script>
+</body>
+</html>
